@@ -1,14 +1,10 @@
-import { useState, useEffect } from "react";
-import Onboarding from "@/components/Onboarding";
-import PatientDashboard from "@/components/PatientDashboard";
-import CaretakerDashboard from "@/components/CaretakerDashboard";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Users,
   User,
   UserCircle,
   ChevronDown,
-  Settings,
   LogOut,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -16,6 +12,13 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/authContextProvider";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { 
+  LazyOnboarding, 
+  LazyPatientDashboard, 
+  LazyCaretakerDashboard 
+} from "@/components/LazyComponents";
 
 type UserType = "patient" | "caretaker" | null;
 
@@ -71,7 +74,13 @@ const Index = () => {
   };
 
   if (!isOnboarded) {
-    return <Onboarding onComplete={handleOnboardingComplete} />;
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner size="lg" text="Loading onboarding..." />}>
+          <LazyOnboarding onComplete={handleOnboardingComplete} />
+        </Suspense>
+      </ErrorBoundary>
+    );
   }
 
   return (
@@ -134,17 +143,21 @@ const Index = () => {
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
-        {userType === "patient" ? (
-          <PatientDashboard
-            setIsPatientDlgOpen={setIsPatientDlgOpen}
-            isPatientDlgOpen={isPatientDlgOpen}
-          />
-        ) : (
-          <CaretakerDashboard
-            setIsCaretakerDlgOpen={setIsCaretakerDlgOpen}
-            isCaretakerDlgOpen={isCaretakerDlgOpen}
-          />
-        )}
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner size="lg" text="Loading dashboard..." />}>
+            {userType === "patient" ? (
+              <LazyPatientDashboard
+                setIsPatientDlgOpen={setIsPatientDlgOpen}
+                isPatientDlgOpen={isPatientDlgOpen}
+              />
+            ) : (
+              <LazyCaretakerDashboard
+                setIsCaretakerDlgOpen={setIsCaretakerDlgOpen}
+                isCaretakerDlgOpen={isCaretakerDlgOpen}
+              />
+            )}
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );

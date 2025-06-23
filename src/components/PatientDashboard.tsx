@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { User, Plus, Pill } from "lucide-react";
 import { format, isToday } from "date-fns";
-import MedicationForm from "./MedicationForm";
 import MedicationList from "./MedicationList";
-import AdherenceStats from "./AdherenceStats";
+import LoadingSpinner from "./LoadingSpinner";
+import ErrorBoundary from "./ErrorBoundary";
+import { LazyMedicationForm, LazyAdherenceStats } from "./LazyComponents";
 import { useMedicationService } from "@/services/medicationService";
 import { CreateMedicationData } from "@/types/medication";
 
@@ -94,7 +95,11 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({
       </div>
 
       {/* Adherence Stats */}
-      <AdherenceStats stats={adherenceStats} isLoading={isLoading} />
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner text="Loading adherence stats..." />}>
+          <LazyAdherenceStats stats={adherenceStats} isLoading={isLoading} />
+        </Suspense>
+      </ErrorBoundary>
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Medications List */}
@@ -188,12 +193,16 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({
       </div>
 
       {/* Medication Form Dialog */}
-      <MedicationForm
-        isOpen={isPatientDlgOpen}
-        onClose={() => setIsPatientDlgOpen(false)}
-        onSubmit={handleAddMedication}
-        isLoading={addMedicationMutation.isPending}
-      />
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner text="Loading form..." />}>
+          <LazyMedicationForm
+            isOpen={isPatientDlgOpen}
+            onClose={() => setIsPatientDlgOpen(false)}
+            onSubmit={handleAddMedication}
+            isLoading={addMedicationMutation.isPending}
+          />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 };
