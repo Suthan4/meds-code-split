@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +14,17 @@ import {
   Clock,
   Plus,
 } from "lucide-react";
-import NotificationSettings from "./NotificationSettings";
-import MedicationForm, { MedicationFormData } from "./MedicationForm";
 import MedicationList from "./MedicationList";
-import AdherenceStats from "./AdherenceStats";
+import LoadingSpinner from "./LoadingSpinner";
+import ErrorBoundary from "./ErrorBoundary";
+import { 
+  LazyMedicationForm, 
+  LazyAdherenceStats, 
+  LazyNotificationSettings 
+} from "./LazyComponents";
 import { format, isToday, isBefore, startOfDay } from "date-fns";
 import { useMedicationService } from "@/services/medicationService";
+import { MedicationFormData } from "./MedicationForm";
 
 interface CaretakerDashboardProps {
   setIsCaretakerDlgOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -226,7 +231,11 @@ const CaretakerDashboard: React.FC<CaretakerDashboardProps> = ({
           </div>
 
           {/* Adherence Stats */}
-          <AdherenceStats stats={adherenceStats} isLoading={isLoading} />
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner text="Loading adherence stats..." />}>
+              <LazyAdherenceStats stats={adherenceStats} isLoading={isLoading} />
+            </Suspense>
+          </ErrorBoundary>
 
           {/* Recent Activity */}
           {recentActivity.length > 0 && (
@@ -430,17 +439,25 @@ const CaretakerDashboard: React.FC<CaretakerDashboardProps> = ({
         </TabsContent>
 
         <TabsContent value="notifications">
-          <NotificationSettings />
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner text="Loading notification settings..." />}>
+              <LazyNotificationSettings />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
       </Tabs>
 
       {/* Medication Form Dialog */}
-      <MedicationForm
-        isOpen={isCaretakerDlgOpen}
-        onClose={() => setIsCaretakerDlgOpen(false)}
-        onSubmit={handleAddMedication}
-        isLoading={addMedicationMutation.isPending}
-      />
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner text="Loading form..." />}>
+          <LazyMedicationForm
+            isOpen={isCaretakerDlgOpen}
+            onClose={() => setIsCaretakerDlgOpen(false)}
+            onSubmit={handleAddMedication}
+            isLoading={addMedicationMutation.isPending}
+          />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 };
