@@ -1,3 +1,10 @@
+export type FrequencyOption =
+  | "Daily"
+  | "Twice Daily"
+  | "Three Times Daily"
+  | "Weekly"
+  | "As Needed";
+
 export interface Medication {
   id: string;
   user_id: string;
@@ -26,7 +33,7 @@ export interface MedicationWithLogs extends Medication {
 export interface CreateMedicationData {
   name: string;
   dosage?: string;
-  frequency: string;
+  frequency: FrequencyOption;
   time_to_take?: string;
 }
 
